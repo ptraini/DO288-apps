@@ -1,4 +1,5 @@
 Starting Scripts 
+github access token: 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
 lab-configure
 git clone https://github.com/mrcodecloud/DO288-apps.git
 lab review-todo start
