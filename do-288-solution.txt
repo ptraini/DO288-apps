@@ -1,0 +1,25 @@
+Starting Scripts 
+lab-configure
+git clone https://github.com/mrcodecloud/DO288-apps.git
+lab review-todo start
+source /usr/local/etc/ocp4.config
+oc login -u ${RHT_OCP4_DEV_USER} -p ${RHT_OCP4_DEV_PASSWORD} ${RHT_OCP4_MASTER_API}
+
+
+Q#1 
+oc new-project crimson
+oc new-app --name pastebin --as-deployment-config --build-env npm_config_registry=https://${RHT_OCP4_NEXUS_SERVER}/repository/nodejs nodejs~https://github.com/mrcodecloud/pastebin.git
+
+git clone https://github.com/mrcodecloud/pastebin.git
+cd pastebin
+python -m json.tool package.json
+vim package.json # Fix the issue mentioned in the above tool
+git add . && git commit -m 'MSG' && git push 
+
+oc start-build --follow bc/pastebin
+oc logs -f bc/pastebin
+oc expose svc pastebin --hostname=pastebin-crimson.apps.domain16.example.com
+# Login to the hostname in browser, and paste the text mention in the question to the form and save it. 
+
+
+
