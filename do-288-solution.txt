@@ -1,5 +1,5 @@
 Starting Scripts 
-github access token: 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
+github access token: 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
 lab-configure
 git clone https://github.com/mrcodecloud/DO288-apps.git
 lab review-todo start
@@ -21,6 +21,25 @@ oc start-build --follow bc/pastebin
 oc logs -f bc/pastebin
 oc expose svc pastebin --hostname=pastebin-crimson.apps.domain16.example.com
 # Login to the hostname in browser, and paste the text mention in the question to the form and save it. 
+
+
+Q#2
+oc new-project toxic 
+
+oc create secret docker-registry registry.redhat.io --docker-username=r.abbasi@it22.nl --docker-password=password
+docker pull registry.redhat.io/rhel8/httpd-24 
+oc import-image http:latest --from=registry.redhat.io/rhel8/httpd-24:latest --insecure=false --confirm --reference-policy='local'
+
+git clone https://github.com/mrcodecloud/oxy.git 
+cd oxy && ll -la
+vim .s2i/bin/assemble
+# Add the copy command "cp -Rf /tmp/src/*.html ./ 
+# Specify date format  "DATE=`date "+%F"`
+# Write test text to the specified file  "$DATE Hi Hello world" >. ./infor.html
+git add . && git commit -m 'update assemble file' && git push 
+
+oc new-app --name oxy --as-deployment-config httpd:latest~https://github.com/mrcodecloud/oxy.git 
+oc expose svc oxy --hostname=toxic-oxy.ocp4.example.com 
 
 
 
