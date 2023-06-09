@@ -1,5 +1,5 @@
 Starting Scripts 
-github access token: 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
+github access token: ##$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$##
 lab-configure
 git clone https://github.com/mrcodecloud/DO288-apps.git
 lab review-todo start
@@ -26,20 +26,41 @@ oc expose svc pastebin --hostname=pastebin-crimson.apps.domain16.example.com
 Q#2
 oc new-project toxic 
 
-oc create secret docker-registry registry.redhat.io --docker-username=r.abbasi@it22.nl --docker-password=password
-docker pull registry.redhat.io/rhel8/httpd-24 
-oc import-image http:latest --from=registry.redhat.io/rhel8/httpd-24:latest --insecure=false --confirm --reference-policy='local'
+oc create secret docker-registry redhat-docker-registry --docker-server=registry.redhat.io --docker-username=r.abbasi@it22.nl --docker-password=password
+oc import-image httpd:latest --from=registry.redhat.io/rhel8/httpd-24:latest --insecure=false --confirm --reference-policy='local'
 
 git clone https://github.com/mrcodecloud/oxy.git 
 cd oxy && ll -la
 vim .s2i/bin/assemble
-# Add the copy command "cp -Rf /tmp/src/*.html ./ 
+# Add the copy command "cp -Rf /tmp/src/*.html /var/www/html 
 # Specify date format  "DATE=`date "+%F"`
-# Write test text to the specified file  "$DATE Hi Hello world" >. ./infor.html
+# Write test text to the specified file  "$DATE Hi Hello world" > /var/www/html/info.html
 git add . && git commit -m 'update assemble file' && git push 
 
 oc new-app --name oxy --as-deployment-config httpd:latest~https://github.com/mrcodecloud/oxy.git 
 oc expose svc oxy --hostname=toxic-oxy.ocp4.example.com 
+
+
+Q#3
+oc project octance
+oc get pod
+oc rsh running-pod-name
+which python3 #Confirm python version from pod and then exit
+oc get bc
+oc set build-hook bc/blog --post-commit --command --/opt/app-src/src/python3 mailer.py [do the mailer.py script already exist there? ]
+oc describe bc/blog | grep Post
+oc start-build bc/blog --follow 
+oc logs -f bc/blog 
+# workbench system 
+mail -u capnhook 
+oc expose svc blog --hostaneme=blog-octance.apps.ocp4.example.com
+
+Q#4
+oc project octane
+oc get dc
+oc set probe dc/blog --livencess --open-tcp=8080 --initial-delay-seconds=10 --timeout-seconds=30 
+oc get pod 
+
 
 
 
