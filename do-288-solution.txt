@@ -61,6 +61,96 @@ oc get dc
 oc set probe dc/blog --livencess --open-tcp=8080 --initial-delay-seconds=10 --timeout-seconds=30 
 oc get pod 
 
+Q#5
+wget /url/to/json/yaml/file
+vim json/yaml/file
+set the following values 
 
+	label template: template=php-app
+	also label, metadata:annotations:template:php-app
+	namespace: indy
+	name: ex288-php-mysql 
+
+change the images version in the deployment configs for php and mysql to latest, from their existing values php:7.1 and mysql:5.7
+we can get the existing version by running following command 
+oc describe is php
+oc describe is mysql 
+
+add a  new env variable in php dc section
+   - name: HELLO_MESSAGE
+     value: ${HELLO_MESSAGE}
+   - name: HELLO_AUDIENCE
+     value: ${HELLO_AUDIENCE}
+
+go to parameters section and make following changes 
+	Add the parameter HELLO_AUDIENCE>>  (as per exam add NAME and value)
+    - name: HELLO_AUDIENCE
+      value: Engineers!
+
+	Remove the defined app url and keep it empty. ( go to route section in template and remove the url , it should be empty)
+    - name: APPLICATION_DOMAIN
+	  #Value: Remove the value by adding # at the start of line
+	  required: true
+	  
+	 Modify the value of parameter HELLO_MESSAGE ---  (Change the value to Bonjour from Ahoy)
+
+	    - name: HELLO_MESSAGE
+	      value: Benjour
+	    
+	Change the SOURCE_REPOSITORY_URL as per question in the value field.
+	    - name: SOURCE_REPOSITORY_URL
+	      value: http://git.domain16.example.com/php-app/php-app.git
+		  
+Run the following command for the deployment 
+oc create -f filename.yml 
+Tests:
+# oc new-app --template=ex288-php-mysql  ==== This should fail. (OR no need to use --template , just # oc new-app ex288-php-mysql also works)
+# oc new-app --template=ex288-php-mysql -p APPLICATION_DOMAIN=php-app-indy.apps.domain16.example.com ===  Bonjour Engineers!!!
+# oc new-app --template=ex288-php-mysql -p APPLICATION_DOMAIN=php-app-indy.apps.domain16.example.com -p HELLO_MESSAGE=NAMASTE -p HELLO_AUDIENCE=Architects!!!       === Hello Architects!! 
+###ex288-php-mysql -p APPLICATION_DOMAIN=php-app-indy.apps.domain16.example.com -p HELLO_MESSAGE=NAMASTE -p HELLO_AUDIENCE=Architects!!!  ====  Namaste Architects!!!
+oc new-app --template=openshift/<template-name> --name=<app-name-as-per-exam>
+
+
+Q#6 
+oc patch configs.imageregistry.operator.openshift.io/cluster --patch '{"spec":{"defaultRoute":true}}' --type=merge
+oc get routes -n openshift-image-registry # keep a note of the route url 
+podman login -u ocpdevop (OCP user) -p $(oc whoami -t) default-route-openshift-image-registry.apps.domain13.example.com --tls-verify=false
+podman pull default-route-openshift-image-registry.apps.domain16.example.com/mizeoul/chartreuse
+podman images 
+
+Q#7 
+oc new-project acid
+oc create secret docker-registry internal --docker-server=registry.domain16.example.com --docker-username=regdevop --docker-password=Ratencot16
+oc secrets link default internal --for pull   
+oc secrets link builder internal
+oc new-app --as-deployment-config --name phosphorus --docker-image=registry.domain16.example.com/openshift/hello-openshift
+oc create configmap clastir --from-literal=RESPONSE="sendimen"
+oc set env --from=configmap/clastir dc/phosphorus   
+oc expose svc phosphorus
+
+Q#8 
+Helm Chart Deployment 
+helm create helm 
+cd helm 
+vim values.yml # Update values according to the question
+vim templates/deployment.yml 
+# Add container port 
+ports:
+- name: http
+  containerPort: 8000
+  protocol: TCP
+#Add readiness and liveness probe
+oc get templates -n openshift cakephp-mysql-example -oyaml > template.yaml # probes can be found in template, copy and paste in the helm template 
+readinessProbe:
+   httpGet:
+      scheme: HTTPS
+      path: /index.html
+      port: 8443
+    initialDelaySeconds: 10
+    periodSeconds: 5
+
+helm install helm . 
+
+Q#9 
 
 
