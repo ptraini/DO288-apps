@@ -133,6 +133,7 @@ Helm Chart Deployment
 helm create helm 
 cd helm 
 vim values.yml # Update values according to the question
+vim chart.yml 
 vim templates/deployment.yml 
 # Add container port 
 ports:
@@ -152,5 +153,40 @@ readinessProbe:
 helm install helm . 
 
 Q#9 
+git clone project-repository.git 
+cd project-repository 
+oc new-project container-build
+ 
+podman build --layers=false -t do288-apache . # . is the containerfile location
+podman images # confirm image building 
+podman tag do288-apache quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
+podman push quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
 
+oc new-app --name hola quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
+oc get pods # pod will be in fail state 
+oc logs hola-pod-id-123 # inspect the containers logs to see why the pod failed 
+Failure reason: 
+	1. port 80 can't be used by random user, below 1024 are only for root users
+	2. the random user-id assigned by openshift doesn't have permission to read and write log files in /var/log/httpd
+
+oc delete all -l app=hola # delete all resouces to create new as per red hat recommendations 
+Change the containerfile for the child container to run on an openshift cluster as a random, un privileged user
+List of changes in the Dockerfile 
+	1. EXPOSE 8080
+	2. LABEL io.openshift.expose-services="8080:http"
+	3. RUN sed -i "s/Listen 80/Listen 8080/g" /etc/httpd/conf/httpd.conf
+	4. RUN sed -i "s/#ServerName www.example.com:80/ServerName 0.0.0.0:8080/g" /etc/httpd/conf/httpd.conf
+	5. RUN chgrp -R 0 /var/log/httpd && /var/run/httpd && chmod -R g=u /var/log/httpd && /var/run/httpd
+	6. USER 1001
+
+git commit -a -m 'changed containerfile' && git push 
+podman rmi do288-apache, quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
+podman build --layers=false -t do288-apache . # . is the containerfile location
+podman images # confirm image building 
+podman tag do288-apache quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
+podman push quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
+oc new-app --name hola quay.io/${RHT_OCP4_QUAY_USER}/do288-apache
+oc expose --port='8080' svc/hola
+oc get route 
+Open the route in the browser for confirmation  
 
