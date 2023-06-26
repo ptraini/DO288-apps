@@ -1,5 +1,5 @@
 # Use the httpd-parent image as base
-FROM quay.io/redhattraining/httpd-parent
+FROM quay.io/r_abbasi/httpd-parent
 
 LABEL io.openshift.expose-service="8080:http"
 RUN sed -i "s/#ServerName www.example.com:80/ServerName 0.0.0.0:8080/g" /etc/httpd/conf/httpd.conf
